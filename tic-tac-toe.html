@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <title>Tic Tac Toe </title>
+        <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+        <nav>
+            <a href="../index.html">Home</a>
+            <a href="#overview">Overview</a>
+            <a href="#rules">Rules</a>
+            <a href="#twoplayer">2 Player</a>
+            <a href="#random">Random AI</a>
+            <a href="#rulebased">Rule-Based AI</a>
+            <a href="#minimax">Minimax</a>
+        </nav>
+
+        <hr>
+        <header>
+            <h1>Tic Tac Toe: From Rules to Optimal Play</h1>
+        </header>
+        
+
+        <p>
+            This page explains different implimentations of Tic Tac Toe, from human-vs-human to AI using minimax
+        </p>
+
+        <main>
+            <section id="overview">
+                <h2>Overview</h2>
+                <p>
+                    Tic Tac Toe is a simple turn-based game that provides a greate environment to explore different decision-making stratagies.
+                </p>
+            </section>
+    
+            <section id="rules">
+                <h2>Game Rules</h2>
+                <ul>
+                    <li>Two player alternate turns</li>
+                    <li>Players place X or O on a 3x3 grid</li>
+                    <li>First to align symbols wins</li>
+                </ul>
+            </section>
+    
+            <section id="twoplayer">
+                <h2>2 Player Mode</h2>
+                <p>
+                    In this mode, two humans play against each other with no AI involvement.
+                </p>
+            </section>
+    
+            <section id="random">
+                <h2>Random AI</h2>
+                <p>The first attempt at automation was deliberately naïve.</p>
+                <p>Instead of asking the computer to “play well”, I asked it to simply play legally. At each turn, I selected one of the available empty cells at random.</p>
+                <p>This immediately solved one problem:  the game could now be played by a single human against the computer.</p>
+                <p>However, it exposed another.</p>
+                <p>The computer has no understanding of the board. It missed obvious wins, failed to block threats, and often made moves that were clearly harmful.</p>
+                <p>This made one thing clear: automation is not the same as strategy.</p>
+                <p>Choosing a move is easy. Choosing a good move is not.</p>   
+                <p>This idea can be seen directly in the move-selection function below:-</p>             
+                <pre><code>
+import random
+
+def get_random_move(board):
+    """
+    Selects a move uniformly at a random from all currently available positions.
+
+    This function demonstrates the simplest form of automated play.
+    It guarentees legal moves, but does not evaluate the board state or anticipate future outcomes.
+    """
+    empty_cells = [
+        (r,c)
+        for r in range(3):
+        for c in range(3):
+        if board[r][c] == ""
+    ]
+
+    return random.choice(empty_cells)
+                </code></pre>
+            </section>
+    
+            <section id="rulebased">
+                <h2>Rule-Based AI</h2>
+                <p> address the randomness, I introduced simple rules. </p>
+                <ol>
+                <li>If a winning move exists, the computer would take it.</li>
+                <li>If the opponent was about to win, the computer would block. </li>
+                <li>If neither applied, it would fall back to positional preferences.</li>
+                </ol>
+                <p>
+                    This approach worked surprising well. The computer now appeared intentional and reactive. Against casual play, it perform convincingly.
+                    But after extended testing, a deeper flaw emerged.
+                    The rules only considered the current board.
+                    They could not anticipate situations where every immediate move looked acceptable, but all of them led to a loss a few turns later.
+                    At this point, the limitation was no longer about what the computer could see - it was about how far it could see.
+                </p>
+                <p>This idea can be seen directly in the move-selection function below:-</p>
+                <pre><code>
+def get_rule_based_move(board):
+    """
+    Selects a move using unsing simple local rules.
+
+    Strategy:
+    1. If a winning move exists, take it.
+    2. If the opponent can win next, block it.
+    3.Otherwise, fall back to positional preferences.
+
+    This approach evaluates only the surrent board and does not look ahead multiple turns.
+    """
+
+    #!. Try to win
+    for move in available_moves(board):
+        if is_winning_move(board, move, AI):
+        return move
+    
+    #2. Try to block opponent
+    for moves in available_moves(board):
+        if is_winning_move(board, move, AI):
+            return move
+    
+    #3. Positional preference (centre, corners, edges)
+    return choose_best_position(board)
+
+                </code></pre>
+            </section>
+    
+            <section id="minimax">
+                <h2>Minimax</h2>
+                <p>By the time the rule-based strategy was in place, the computer appeared competent. It could win simple games, block obvious threats, and generally behave in a way that felt intentional. However, longer games revealed a persistent issue.</p>
+                <p>There were positions where none of the immediate moves looked dangerous, yet the game was already lost.</p>
+                <p>The rule-based player could not recognize these situations because every rule it followed examined only the current board. Improving individual rules helped omly marginally; the problem was more fundamental.</p>
+                <p>At this point, it became clear that choosing a move required more than reacting to the present.</p>
+                <p>What was needed was a way to reason about how the game would unfold  after a move was made.</p>
+                <p>This led to the use of minimax strategy.</p>
+                <p>Instead of asking “Which move looks good right now?”, the computer now asks a different question:</p>
+                <p>     “is I makethis move, and my opponent explores the game forward in time.”</p>
+                <p>To answer this, the program explores the game forward in time.</p>
+                <p>From the current board, each legal move produces a new board state. From those states, further moves are possible, and the process continues until the game must end - either in a win, a loss, or a draw.</p>
+                <p>These final outcomes are treated as evaluations:</p>
+                <ol>
+                    <li>A win us desirable,</li>
+                    <li>A loss is undesirable,</li>
+                    <li>And a draw lies in between.</li>
+                </ol>
+                <p>The result is no longer a logically reasonable move, but a globally optimal one.</p>
+                <p>The result is no longer a logically reasonable move, but a globally optimal one.
+                    Wit minimax, the computer no longer relies on heuristics or chance.</p>
+                <p>If a winning path exists, it will find it. If no such path exists, it will avoid losing altogether.</p>
+                <p>This strategy reaches the theoretical limit of Tic-Toc-Toe.Any further improvement would not come from better decision making, but from changing the game itself.</p>
+                <p>This idea can be seen directly in the move-selection function below:-</p>
+                <pre><code>
+def minimax(board, depth, is_maximising):
+    """
+    Recursively evalutaes the game tree strategy explores future board states.
+
+    Unlike rule-based logic, this strategy explores future board states.
+    It assumes both players play optimally and assign a score to each possible outcome.
+
+    This allows the computer to avoid short-sighted moves that appear safe now but lead to inevitable loss later.
+    """
+
+    result = check_winner(board)
+
+    if result == AI:
+        retun 10 - depth
+    elif result == HUMAN:
+        return depth - 10
+    elif is_draw(board):
+        return 0
+
+    if is_maximising:
+    best_score = -float("inf")
+    for move in available_moves(board):
+        board[move] = AI
+        score = minimax(board, depth, score)
+        board[move] = EMPTY
+        best_score = max(best_score, score)
+    return beat_score
+
+    else:
+        best_score = float("inf")
+        for move in available_moves(board):
+            board[move] = HUMAN
+            score = minimax(board, depth+1, True)
+            board[move] = EMPTY
+            best_score = min(best_score, score)
+        retun best_score
+                </code></pre>
+
+
+
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <a href="../index.html">Back to Home</a>
+        </footer>
+    </body>
+</html>
